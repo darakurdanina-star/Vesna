@@ -19,6 +19,7 @@
             overflow: hidden;
             position: fixed;
             touch-action: none;
+            -webkit-touch-callout: none;
         }
 
         body {
@@ -82,8 +83,8 @@
         /* ЛУНКИ (невидимые зоны) */
         .hole-zone {
             position: absolute;
-            width: 12%;
-            height: 12%;
+            width: 14%;  /* Увеличено для мобильных */
+            height: 14%;
             transform: translate(-50%, -50%);
             z-index: 5;
             /* border: 2px dashed red; */
@@ -95,22 +96,19 @@
             width: 8%;
             height: auto;
             cursor: grab;
-            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
             user-select: none;
             filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
             z-index: 20;
             transition: filter 0.2s;
             pointer-events: auto;
+            touch-action: none;
         }
 
         .seed:active {
             cursor: grabbing;
             filter: drop-shadow(0 8px 6px rgba(0,0,0,0.5));
-        }
-
-        .seed.dragging, .vegetable.dragging {
-            z-index: 1000 !important;
-            transition: none;
         }
 
         .seed.placed {
@@ -136,12 +134,14 @@
             width: 9%;
             height: auto;
             cursor: grab;
-            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
             user-select: none;
             filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
             z-index: 20;
             transition: filter 0.2s;
             transform: translate(-50%, -50%);
+            touch-action: none;
         }
 
         .vegetable:active {
@@ -154,6 +154,14 @@
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
             pointer-events: none;
             z-index: 20;
+        }
+
+        /* Класс для перетаскивания */
+        .dragging {
+            z-index: 1000 !important;
+            transition: none !important;
+            opacity: 0.9;
+            transform: scale(1.1) !important;
         }
 
         /* ПОЗИЦИИ СЕМЯН */
@@ -372,6 +380,7 @@
         let isDragging = false;
         let currentElement = null;
         let startX, startY, startLeft, startTop;
+        let currentScreen = null;
         let audioContext = null;
 
         // Инициализация звука
@@ -410,53 +419,59 @@
             } catch (e) {}
         }
 
-        // ========== ПЕРЕТАСКИВАНИЕ ==========
+        // ========== МОБИЛЬНОЕ ПЕРЕТАСКИВАНИЕ ==========
         
-        function onDragStart(e) {
+        function handleTouchStart(e) {
+            e.preventDefault();
+            
             const element = e.target;
             
+            // Проверяем, можно ли перетаскивать
             if (!element.classList.contains('seed') && !element.classList.contains('vegetable')) return;
             if (element.classList.contains('placed')) return;
             if (winScreen.style.display === 'flex') return;
             
-            e.preventDefault();
-            initAudio();
+            const touch = e.touches[0];
             
             currentElement = element;
             isDragging = true;
+            currentScreen = element.closest('.screen').id;
+            
+            // Добавляем класс для перетаскивания
             currentElement.classList.add('dragging');
             
-            // Поднимаем элемент над всеми
-            currentElement.style.zIndex = '1000';
-            
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
+            // Получаем текущие координаты
             const rect = currentElement.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
             
-            startX = clientX - rect.left;
-            startY = clientY - rect.top;
+            // Сохраняем смещение относительно пальца
+            startX = touch.clientX - rect.left;
+            startY = touch.clientY - rect.top;
             
+            // Сохраняем начальные позиции
             startLeft = rect.left - containerRect.left;
             startTop = rect.top - containerRect.top;
             
+            // Устанавливаем позицию в пикселях
             currentElement.style.left = startLeft + 'px';
             currentElement.style.top = startTop + 'px';
+            currentElement.style.width = rect.width + 'px';
+            currentElement.style.transform = 'none';
         }
 
-        function onDragMove(e) {
-            if (!isDragging || !currentElement) return;
+        function handleTouchMove(e) {
             e.preventDefault();
             
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            if (!isDragging || !currentElement) return;
             
+            const touch = e.touches[0];
             const containerRect = container.getBoundingClientRect();
             
-            let newLeft = clientX - startX - containerRect.left;
-            let newTop = clientY - startY - containerRect.top;
+            // Вычисляем новую позицию
+            let newLeft = touch.clientX - startX - containerRect.left;
+            let newTop = touch.clientY - startY - containerRect.top;
             
+            // Ограничиваем движение в пределах контейнера
             const elementWidth = currentElement.offsetWidth;
             const elementHeight = currentElement.offsetHeight;
             
@@ -467,28 +482,29 @@
             currentElement.style.top = newTop + 'px';
         }
 
-        function onDragEnd(e) {
-            if (!isDragging || !currentElement) return;
+        function handleTouchEnd(e) {
             e.preventDefault();
             
-            isDragging = false;
+            if (!isDragging || !currentElement) return;
+            
+            // Убираем класс перетаскивания
             currentElement.classList.remove('dragging');
             
-            // Возвращаем обычный z-index
-            currentElement.style.zIndex = '20';
-            
+            // Проверяем, куда отпустили
             checkDrop(currentElement);
+            
+            // Сбрасываем
+            isDragging = false;
             currentElement = null;
+            currentScreen = null;
         }
 
-        // ========== ПРОВЕРКА ==========
+        // ========== ПРОВЕРКА ПОПАДАНИЯ ==========
         
         function checkDrop(element) {
             const elementRect = element.getBoundingClientRect();
             const elementCenterX = elementRect.left + elementRect.width / 2;
             const elementCenterY = elementRect.top + elementRect.height / 2;
-            
-            const currentScreen = element.closest('.screen').id;
             
             if (currentScreen === 'screen-plant') {
                 // ПОСАДКА
@@ -507,13 +523,14 @@
                         if (seedColor === requiredColor && !element.classList.contains('placed')) {
                             plantSeed(element, hole, i);
                             playSound('correct');
+                            return;
                         } else {
                             playSound('error');
                             returnToStart(element);
                             container.classList.add('shake');
                             setTimeout(() => container.classList.remove('shake'), 400);
+                            return;
                         }
-                        return;
                     }
                 }
                 returnToStart(element);
@@ -527,12 +544,12 @@
                     const basket = baskets[i];
                     const basketRect = basket.getBoundingClientRect();
                     
-                    // Увеличиваем зону попадания
+                    // Увеличиваем зону попадания для мобильных
                     const expandedRect = {
-                        left: basketRect.left - 40,
-                        right: basketRect.right + 40,
-                        top: basketRect.top - 40,
-                        bottom: basketRect.bottom + 40
+                        left: basketRect.left - 50,
+                        right: basketRect.right + 50,
+                        top: basketRect.top - 50,
+                        bottom: basketRect.bottom + 50
                     };
                     
                     if (elementCenterX >= expandedRect.left && elementCenterX <= expandedRect.right &&
@@ -540,21 +557,17 @@
                         
                         const basketColor = basket.dataset.color;
                         
-                        // Отладка
-                        console.log('Овощ цвет:', vegetableColor);
-                        console.log('Корзина цвет:', basketColor);
-                        console.log('Совпадают?', vegetableColor === basketColor);
-                        
                         if (vegetableColor === basketColor && !element.classList.contains('placed')) {
                             harvestVegetable(element, basket, i);
                             playSound('correct');
+                            return;
                         } else {
                             playSound('error');
                             returnVegetableToStart(element);
                             container.classList.add('shake');
                             setTimeout(() => container.classList.remove('shake'), 400);
+                            return;
                         }
-                        return;
                     }
                 }
                 returnVegetableToStart(element);
@@ -579,6 +592,9 @@
         }
 
         function returnToStart(seed) {
+            seed.style.width = '';
+            seed.style.transform = '';
+            
             switch(seed.dataset.color) {
                 case 'red': seed.style.left = '4%'; seed.style.top = '3%'; break;
                 case 'orange': seed.style.left = '14%'; seed.style.top = '3%'; break;
@@ -623,6 +639,9 @@
         }
 
         function returnVegetableToStart(vegetable) {
+            vegetable.style.width = '';
+            vegetable.style.transform = 'translate(-50%, -50%)';
+            
             switch(vegetable.dataset.vegetable) {
                 case 'tomato':
                     vegetable.style.left = '27%';
@@ -649,7 +668,6 @@
                     vegetable.style.top = '66.8%';
                     break;
             }
-            vegetable.style.transform = 'translate(-50%, -50%)';
         }
 
         function checkAllHarvested() {
@@ -685,20 +703,28 @@
             toHarvestBtn.classList.add('hidden');
         }
 
-        // ========== СОБЫТИЯ ==========
+        // ========== НАЗНАЧАЕМ СОБЫТИЯ ==========
         
+        // Удаляем старые обработчики
         document.querySelectorAll('.seed, .vegetable').forEach(element => {
-            element.addEventListener('mousedown', onDragStart);
-            element.addEventListener('touchstart', onDragStart, { passive: false });
+            element.removeEventListener('touchstart', handleTouchStart);
+            element.removeEventListener('mousedown', handleTouchStart);
+        });
+        
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('touchend', handleTouchEnd);
+        
+        // Добавляем новые обработчики только для touch
+        document.querySelectorAll('.seed, .vegetable').forEach(element => {
+            element.addEventListener('touchstart', handleTouchStart, { passive: false });
         });
 
-        window.addEventListener('mousemove', onDragMove);
-        window.addEventListener('touchmove', onDragMove, { passive: false });
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+        window.addEventListener('touchend', handleTouchEnd, { passive: false });
+        window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-        window.addEventListener('mouseup', onDragEnd);
-        window.addEventListener('touchend', onDragEnd);
-
-        document.addEventListener('selectstart', (e) => e.preventDefault());
+        // Запрещаем контекстное меню на всех элементах
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
 
         // Глобальные функции
         window.switchToHarvest = switchToHarvest;
