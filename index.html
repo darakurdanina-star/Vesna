@@ -30,11 +30,11 @@
             align-items: center;
         }
 
-        /* ИГРОВОЙ КОНТЕЙНЕР */
+        /* ИГРОВОЙ КОНТЕЙНЕР - ПОЛНЫЙ ЭКРАН С СОХРАНЕНИЕМ ПРОПОРЦИЙ */
         #game-container {
             position: relative;
-            width: 100vw;
-            height: 57.14vw; /* 768/1344 = 0.5714 */
+            width: min(100vw, 177.78vh);
+            height: min(56.25vw, 100vh);
             max-width: 1344px;
             max-height: 768px;
             background-color: #4CAF50;
@@ -83,7 +83,7 @@
         /* ЛУНКИ (невидимые зоны) */
         .hole-zone {
             position: absolute;
-            width: 14%;  /* Увеличено для мобильных */
+            width: 14%;
             height: 14%;
             transform: translate(-50%, -50%);
             z-index: 5;
@@ -705,16 +705,15 @@
 
         // ========== НАЗНАЧАЕМ СОБЫТИЯ ==========
         
-        // Удаляем старые обработчики
+        // Очищаем старые обработчики
         document.querySelectorAll('.seed, .vegetable').forEach(element => {
             element.removeEventListener('touchstart', handleTouchStart);
-            element.removeEventListener('mousedown', handleTouchStart);
         });
         
         window.removeEventListener('touchmove', handleTouchMove);
         window.removeEventListener('touchend', handleTouchEnd);
         
-        // Добавляем новые обработчики только для touch
+        // Добавляем новые обработчики
         document.querySelectorAll('.seed, .vegetable').forEach(element => {
             element.addEventListener('touchstart', handleTouchStart, { passive: false });
         });
@@ -723,7 +722,7 @@
         window.addEventListener('touchend', handleTouchEnd, { passive: false });
         window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-        // Запрещаем контекстное меню на всех элементах
+        // Запрещаем контекстное меню
         document.addEventListener('contextmenu', (e) => e.preventDefault());
 
         // Глобальные функции
