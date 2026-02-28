@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Посади семена</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            touch-action: none;
+            background-color: #2c3e50;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 57.14vw; /* 768/1344 = 0.5714, сохраняем пропорции фона */
+            max-width: 1344px;
+            max-height: 768px;
+            background-color: #4CAF50;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            margin: auto;
+        }
+
+        /* ФОН С ЛУНКАМИ */
+        .background-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('fon.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+        }
+
+        /* КАРТА ПОСАДКИ */
+        .map-container {
+            position: absolute;
+            top: 2%;
+            right: 2%;
+            width: 25%;
+            max-width: 200px;
+            aspect-ratio: 1/1;
+            border: 4px solid white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            z-index: 10;
+            background: white;
+            pointer-events: none;
+        }
+
+        .map-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* ЛУНКИ (невидимые зоны для проверки) */
+        .hole-zone {
+            position: absolute;
+            width: 12%;  /* Размер зоны вокруг лунки */
+            height: 12%;  /* Чтобы ребёнку было легче попасть */
+            transform: translate(-50%, -50%); /* Центрируем по координатам */
+            z-index: 5;
+            /* border: 2px dashed red; /* Раскомментируй для отладки */
+        }
+
+        /* СЕМЕНА */
+        .seed {
+            position: absolute;
+            width: 8%;
+            height: auto;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
+            z-index: 20;
+            transition: filter 0.2s;
+        }
+
+        .seed:active {
+            cursor: grabbing;
+            filter: drop-shadow(0 8px 6px rgba(0,0,0,0.5));
+            transform: scale(1.05);
+        }
+
+        .seed.dragging {
+            transition: none;
+        }
+
+        .seed.placed {
+            cursor: default;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+            pointer-events: none; /* Посаженное семя больше нельзя двигать */
+        }
+
+        /* СТАРТОВЫЕ ПОЗИЦИИ СЕМЯН (внизу) */
+        #seed-red { left: 10%; top: 90%; }
+        #seed-orange { left: 25%; top: 90%; }
+        #seed-brown { left: 40%; top: 90%; }
+        #seed-purple { left: 55%; top: 90%; }
+        #seed-beige { left: 70%; top: 90%; }
+        #seed-green { left: 85%; top: 90%; }
+
+        /* ЭКРАН РЕЗУЛЬТАТА (урожай) */
+        #result-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .result-img {
+            width: 80%;
+            max-width: 500px;
+            border: 5px solid white;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .next-button {
+            padding: 15px 40px;
+            font-size: 28px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #2E7D32;
+            font-weight: bold;
+        }
+
+        .next-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #2E7D32;
+        }
+
+        /* Анимация тряски */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- ФОН -->
+        <div class="background-layer"></div>
+
+        <!-- КАРТА ПОСАДКИ -->
+        <div class="map-container">
+            <img src="map.png" alt="Карта посадки" class="map-img">
+        </div>
+
+        <!-- НЕВИДИМЫЕ ЗОНЫ ЛУНОК (для проверки попадания) -->
+        <!-- Лунка 1 (нижний ряд, красное семя) -->
+        <div class="hole-zone" id="hole-1" style="left: 27%; top: 83.3%;" data-seed="red"></div>
+        <!-- Лунка 2 (нижний ряд, коричневое) -->
+        <div class="hole-zone" id="hole-2" style="left: 48.5%; top: 83.3%;" data-seed="brown"></div>
+        <!-- Лунка 3 (нижний ряд, бежевое) -->
+        <div class="hole-zone" id="hole-3" style="left: 68.8%; top: 83.3%;" data-seed="beige"></div>
+        <!-- Лунка 4 (верхний ряд, оранжевое) -->
+        <div class="hole-zone" id="hole-4" style="left: 34.8%; top: 66.8%;" data-seed="orange"></div>
+        <!-- Лунка 5 (верхний ряд, фиолетовое) -->
+        <div class="hole-zone" id="hole-5" style="left: 48.5%; top: 66.8%;" data-seed="purple"></div>
+        <!-- Лунка 6 (верхний ряд, зелёное) -->
+        <div class="hole-zone" id="hole-6" style="left: 62.2%; top: 66.8%;" data-seed="green"></div>
+
+        <!-- СЕМЕНА (расположены внизу) -->
+        <img src="red.png" class="seed" id="seed-red" data-color="red">
+        <img src="orange.png" class="seed" id="seed-orange" data-color="orange">
+        <img src="brown.png" class="seed" id="seed-brown" data-color="brown">
+        <img src="purple.png" class="seed" id="seed-purple" data-color="purple">
+        <img src="beige.png" class="seed" id="seed-beige" data-color="beige">
+        <img src="green.png" class="seed" id="seed-green" data-color="green">
+
+        <!-- ЭКРАН С РЕЗУЛЬТАТОМ (урожай) -->
+        <div id="result-screen">
+            <img src="result.png" alt="Урожай вырос!" class="result-img">
+            <button class="next-button" onclick="goToHarvest()">🌱 НА СБОР УРОЖАЯ 🌱</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== ИГРОВАЯ ЛОГИКА ==========
+        
+        // Получаем все семена и зоны лунок
+        const seeds = document.querySelectorAll('.seed');
+        const holes = document.querySelectorAll('.hole-zone');
+        const resultScreen = document.getElementById('result-screen');
+        const container = document.getElementById('game-container');
+
+        // Состояние игры: какие лунки уже заполнены
+        const filledHoles = new Array(holes.length).fill(false);
+        
+        // Текущее перетаскивание
+        let isDragging = false;
+        let currentSeed = null;
+        let startX, startY, startLeft, startTop;
+
+        // Звуки (простые)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15);
+            }
+        }
+
+        // ========== ПЕРЕТАСКИВАНИЕ ==========
+        
+        function onDragStart(e) {
+            // Игнорируем, если семя уже посажено
+            if (e.target.classList.contains('placed')) return;
+            
+            e.preventDefault();
+            currentSeed = e.target;
+            
+            // Если результат уже показан — не даём двигать
+            if (resultScreen.style.display === 'flex') return;
+            
+            isDragging = true;
+            currentSeed.classList.add('dragging');
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const rect = currentSeed.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            startX = clientX - rect.left;
+            startY = clientY - rect.top;
+            
+            startLeft = rect.left - containerRect.left;
+            startTop = rect.top - containerRect.top;
+            
+            // Убираем transform для свободного перемещения
+            currentSeed.style.transform = 'none';
+            currentSeed.style.left = startLeft + 'px';
+            currentSeed.style.top = startTop + 'px';
+        }
+
+        function onDragMove(e) {
+            if (!isDragging || !currentSeed) return;
+            e.preventDefault();
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const containerRect = container.getBoundingClientRect();
+            
+            let newLeft = clientX - startX - containerRect.left;
+            let newTop = clientY - startY - containerRect.top;
+            
+            // Ограничиваем движение в пределах контейнера
+            const seedWidth = currentSeed.offsetWidth;
+            const seedHeight = currentSeed.offsetHeight;
+            
+            newLeft = Math.max(0, Math.min(newLeft, containerRect.width - seedWidth));
+            newTop = Math.max(0, Math.min(newTop, containerRect.height - seedHeight));
+            
+            currentSeed.style.left = newLeft + 'px';
+            currentSeed.style.top = newTop + 'px';
+        }
+
+        function onDragEnd(e) {
+            if (!isDragging || !currentSeed) return;
+            e.preventDefault();
+            
+            isDragging = false;
+            currentSeed.classList.remove('dragging');
+            
+            // Проверяем, куда отпустили семя
+            checkDrop(currentSeed);
+            currentSeed = null;
+        }
+
+        // ========== ПРОВЕРКА ПОПАДАНИЯ ==========
+        
+        function checkDrop(seed) {
+            const seedRect = seed.getBoundingClientRect();
+            const seedCenterX = seedRect.left + seedRect.width / 2;
+            const seedCenterY = seedRect.top + seedRect.height / 2;
+            
+            const seedColor = seed.dataset.color;
+            
+            // Ищем лунку, в которую попал центр семени
+            for (let i = 0; i < holes.length; i++) {
+                const hole = holes[i];
+                const holeRect = hole.getBoundingClientRect();
+                
+                if (seedCenterX >= holeRect.left && seedCenterX <= holeRect.right &&
+                    seedCenterY >= holeRect.top && seedCenterY <= holeRect.bottom) {
+                    
+                    // Проверяем, подходит ли семя для этой лунки
+                    const requiredColor = hole.dataset.seed;
+                    
+                    if (seedColor === requiredColor && !filledHoles[i]) {
+                        // ПРАВИЛЬНО! Семя сажаем в лунку
+                        plantSeed(seed, hole, i);
+                        playSound('correct');
+                    } else {
+                        // НЕПРАВИЛЬНО: семя возвращается на старт
+                        playSound('error');
+                        returnSeedToStart(seed);
+                        // Трясём контейнер
+                        container.classList.add('shake');
+                        setTimeout(() => container.classList.remove('shake'), 400);
+                    }
+                    return;
+                }
+            }
+            
+            // Если отпустили не над лункой — возвращаем на старт
+            returnSeedToStart(seed);
+        }
+
+        // Посадка семени в лунку
+        function plantSeed(seed, hole, holeIndex) {
+            // Помечаем лунку как заполненную
+            filledHoles[holeIndex] = true;
+            
+            // Добавляем семени класс "посажено"
+            seed.classList.add('placed');
+            
+            // Перемещаем семя в центр лунки
+            const holeRect = hole.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            const targetLeft = holeRect.left - containerRect.left + (holeRect.width / 2) - (seed.offsetWidth / 2);
+            const targetTop = holeRect.top - containerRect.top + (holeRect.height / 2) - (seed.offsetHeight / 2);
+            
+            seed.style.left = targetLeft + 'px';
+            seed.style.top = targetTop + 'px';
+            
+            // Проверяем, все ли лунки заполнены
+            checkAllPlanted();
+        }
+
+        // Возврат семени на стартовую позицию
+        function returnSeedToStart(seed) {
+            const seedId = seed.id;
+            
+            // Возвращаем в зависимости от цвета
+            switch(seed.dataset.color) {
+                case 'red': seed.style.left = '10%'; seed.style.top = '90%'; break;
+                case 'orange': seed.style.left = '25%'; seed.style.top = '90%'; break;
+                case 'brown': seed.style.left = '40%'; seed.style.top = '90%'; break;
+                case 'purple': seed.style.left = '55%'; seed.style.top = '90%'; break;
+                case 'beige': seed.style.left = '70%'; seed.style.top = '90%'; break;
+                case 'green': seed.style.left = '85%'; seed.style.top = '90%'; break;
+            }
+            
+            // Возвращаем transform на место
+            seed.style.transform = 'translate(0, 0)';
+        }
+
+        // Проверка, все ли семена посажены
+        function checkAllPlanted() {
+            const allPlanted = Array.from(seeds).every(seed => seed.classList.contains('placed'));
+            
+            if (allPlanted) {
+                // Показываем результат (урожай)
+                setTimeout(() => {
+                    resultScreen.style.display = 'flex';
+                }, 500);
+            }
+        }
+
+        // Переход ко второму экрану (сбор урожая)
+        function goToHarvest() {
+            // Здесь будет переход на второй экран
+            alert('Переход на сбор урожая!');
+            // В реальности: window.location.href = 'harvest.html';
+        }
+
+        // ========== НАЗНАЧАЕМ СОБЫТИЯ ==========
+        
+        seeds.forEach(seed => {
+            seed.addEventListener('mousedown', onDragStart);
+            seed.addEventListener('touchstart', onDragStart, { passive: false });
+        });
+
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('touchmove', onDragMove, { passive: false });
+
+        window.addEventListener('mouseup', onDragEnd);
+        window.addEventListener('touchend', onDragEnd);
+
+        // Сбрасываем выделение текста при кликах
+        document.addEventListener('selectstart', (e) => e.preventDefault());
+
+    </script>
+</body>
+</html>
