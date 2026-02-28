@@ -89,10 +89,10 @@
             /* border: 2px dashed red; */
         }
 
-        /* СЕМЕНА - ВСЕ ОДИНАКОВОГО РАЗМЕРА */
+        /* СЕМЕНА */
         .seed {
             position: absolute;
-            width: 8%;  /* Фиксированный размер для всех семян */
+            width: 8%;
             height: auto;
             cursor: grab;
             touch-action: none;
@@ -108,7 +108,8 @@
             filter: drop-shadow(0 8px 6px rgba(0,0,0,0.5));
         }
 
-        .seed.dragging {
+        .seed.dragging, .vegetable.dragging {
+            z-index: 1000 !important;
             transition: none;
         }
 
@@ -116,19 +117,20 @@
             cursor: default;
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
             pointer-events: none;
+            z-index: 20;
         }
 
-        /* КОРЗИНКИ - ОЧЕНЬ КРУПНЫЕ И НИЖЕ */
+        /* КОРЗИНКИ */
         .basket {
             position: absolute;
-            width: 15%;  /* Увеличено с 12% до 15% */
+            width: 15%;
             height: auto;
             z-index: 15;
             pointer-events: none;
             filter: drop-shadow(0 8px 8px rgba(0,0,0,0.5));
         }
 
-        /* ОВОЩИ - ТОЖЕ КРУПНЕЕ */
+        /* ОВОЩИ */
         .vegetable {
             position: absolute;
             width: 9%;
@@ -147,17 +149,14 @@
             filter: drop-shadow(0 8px 6px rgba(0,0,0,0.5));
         }
 
-        .vegetable.dragging {
-            transition: none;
-        }
-
         .vegetable.placed {
             cursor: default;
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
             pointer-events: none;
+            z-index: 20;
         }
 
-        /* ПОЗИЦИИ СЕМЯН (НАВЕРХУ) */
+        /* ПОЗИЦИИ СЕМЯН */
         #seed-red { left: 4%; top: 3%; width: 8%; }
         #seed-orange { left: 14%; top: 3%; width: 8%; }
         #seed-brown { left: 24%; top: 3%; width: 8%; }
@@ -165,7 +164,7 @@
         #seed-beige { left: 44%; top: 3%; width: 8%; }
         #seed-green { left: 54%; top: 3%; width: 8%; }
 
-        /* ПОЗИЦИИ КОРЗИНОК - НИЖЕ И РАВНОМЕРНО */
+        /* ПОЗИЦИИ КОРЗИНОК */
         #basket-red { left: 5%; top: 12%; width: 15%; }
         #basket-orange { left: 22%; top: 12%; width: 15%; }
         #basket-brown { left: 39%; top: 12%; width: 15%; }
@@ -312,7 +311,7 @@
             <div class="hole-zone" id="hole-5" style="left: 48.5%; top: 66.8%;" data-seed="purple" data-screen="plant"></div>
             <div class="hole-zone" id="hole-6" style="left: 62.2%; top: 66.8%;" data-seed="green" data-screen="plant"></div>
 
-            <!-- СЕМЕНА (ВСЕ ОДИНАКОВОГО РАЗМЕРА) -->
+            <!-- СЕМЕНА -->
             <img src="red.png" class="seed" id="seed-red" data-color="red" data-screen="plant">
             <img src="orange.png" class="seed" id="seed-orange" data-color="orange" data-screen="plant">
             <img src="brown.png" class="seed" id="seed-brown" data-color="brown" data-screen="plant">
@@ -326,7 +325,7 @@
 
         <!-- ========== ЭКРАН 2: СБОР УРОЖАЯ ========== -->
         <div id="screen-harvest" class="screen">
-            <!-- КОРЗИНКИ (ОЧЕНЬ КРУПНЫЕ, НИЖЕ) -->
+            <!-- КОРЗИНКИ -->
             <img src="red1.png" class="basket" id="basket-red" data-color="red">
             <img src="orange1.png" class="basket" id="basket-orange" data-color="orange">
             <img src="brown1.png" class="basket" id="basket-brown" data-color="brown">
@@ -342,9 +341,9 @@
             <div class="hole-zone" id="hole-5-harvest" style="left: 48.5%; top: 66.8%;" data-vegetable="buk" data-screen="harvest"></div>
             <div class="hole-zone" id="hole-6-harvest" style="left: 62.2%; top: 66.8%;" data-vegetable="ogr" data-screen="harvest"></div>
 
-            <!-- ОВОЩИ (В ЛУНКАХ) -->
+            <!-- ОВОЩИ -->
             <img src="tomato.png" class="vegetable" id="veg-tomato" data-vegetable="tomato" data-color="red" style="left: 27%; top: 83.3%; transform: translate(-50%, -50%);">
-            <img src="potato1.png" class="vegetable" id="veg-potato" data-vegetable="potato" data-color="brown" style="left: 48.5%; top: 83.3%; transform: translate(-50%, -50%);">
+            <img src="potato.png" class="vegetable" id="veg-potato" data-vegetable="potato" data-color="brown" style="left: 48.5%; top: 83.3%; transform: translate(-50%, -50%);">
             <img src="luk.png" class="vegetable" id="veg-luk" data-vegetable="luk" data-color="beige" style="left: 68.8%; top: 83.3%; transform: translate(-50%, -50%);">
             <img src="carrot.png" class="vegetable" id="veg-carrot" data-vegetable="carrot" data-color="orange" style="left: 34.8%; top: 66.8%; transform: translate(-50%, -50%);">
             <img src="buk.png" class="vegetable" id="veg-buk" data-vegetable="buk" data-color="purple" style="left: 48.5%; top: 66.8%; transform: translate(-50%, -50%);">
@@ -427,6 +426,9 @@
             isDragging = true;
             currentElement.classList.add('dragging');
             
+            // Поднимаем элемент над всеми
+            currentElement.style.zIndex = '1000';
+            
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             
@@ -471,6 +473,9 @@
             
             isDragging = false;
             currentElement.classList.remove('dragging');
+            
+            // Возвращаем обычный z-index
+            currentElement.style.zIndex = '20';
             
             checkDrop(currentElement);
             currentElement = null;
@@ -522,17 +527,23 @@
                     const basket = baskets[i];
                     const basketRect = basket.getBoundingClientRect();
                     
+                    // Увеличиваем зону попадания
                     const expandedRect = {
-                        left: basketRect.left - 30,
-                        right: basketRect.right + 30,
-                        top: basketRect.top - 30,
-                        bottom: basketRect.bottom + 30
+                        left: basketRect.left - 40,
+                        right: basketRect.right + 40,
+                        top: basketRect.top - 40,
+                        bottom: basketRect.bottom + 40
                     };
                     
                     if (elementCenterX >= expandedRect.left && elementCenterX <= expandedRect.right &&
                         elementCenterY >= expandedRect.top && elementCenterY <= expandedRect.bottom) {
                         
                         const basketColor = basket.dataset.color;
+                        
+                        // Отладка
+                        console.log('Овощ цвет:', vegetableColor);
+                        console.log('Корзина цвет:', basketColor);
+                        console.log('Совпадают?', vegetableColor === basketColor);
                         
                         if (vegetableColor === basketColor && !element.classList.contains('placed')) {
                             harvestVegetable(element, basket, i);
@@ -696,5 +707,3 @@
     </script>
 </body>
 </html>
-
-     
