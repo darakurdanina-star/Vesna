@@ -82,17 +82,17 @@
         /* ЛУНКИ (невидимые зоны) */
         .hole-zone {
             position: absolute;
-            width: 12%;  /* Увеличено для удобства */
+            width: 12%;
             height: 12%;
             transform: translate(-50%, -50%);
             z-index: 5;
-            /* border: 2px dashed red; /* Для отладки */
+            /* border: 2px dashed red; */
         }
 
-        /* СЕМЕНА - КРУПНЕЕ */
+        /* СЕМЕНА - ВСЕ ОДИНАКОВОГО РАЗМЕРА */
         .seed {
             position: absolute;
-            width: 9%;  /* Увеличено с 6% */
+            width: 8%;  /* Фиксированный размер для всех семян */
             height: auto;
             cursor: grab;
             touch-action: none;
@@ -118,20 +118,20 @@
             pointer-events: none;
         }
 
-        /* КОРЗИНКИ - В 3 РАЗА БОЛЬШЕ */
+        /* КОРЗИНКИ - ОЧЕНЬ КРУПНЫЕ И НИЖЕ */
         .basket {
             position: absolute;
-            width: 12%;  /* Увеличено с 6% до 12% (в 2 раза) */
+            width: 15%;  /* Увеличено с 12% до 15% */
             height: auto;
             z-index: 15;
             pointer-events: none;
-            filter: drop-shadow(0 6px 6px rgba(0,0,0,0.4));
+            filter: drop-shadow(0 8px 8px rgba(0,0,0,0.5));
         }
 
         /* ОВОЩИ - ТОЖЕ КРУПНЕЕ */
         .vegetable {
             position: absolute;
-            width: 9%;  /* Увеличено с 6% */
+            width: 9%;
             height: auto;
             cursor: grab;
             touch-action: none;
@@ -158,20 +158,20 @@
         }
 
         /* ПОЗИЦИИ СЕМЯН (НАВЕРХУ) */
-        #seed-red { left: 4%; top: 3%; }
-        #seed-orange { left: 16%; top: 3%; }
-        #seed-brown { left: 28%; top: 3%; }
-        #seed-purple { left: 40%; top: 3%; }
-        #seed-beige { left: 52%; top: 3%; }
-        #seed-green { left: 64%; top: 3%; }
+        #seed-red { left: 4%; top: 3%; width: 8%; }
+        #seed-orange { left: 14%; top: 3%; width: 8%; }
+        #seed-brown { left: 24%; top: 3%; width: 8%; }
+        #seed-purple { left: 34%; top: 3%; width: 8%; }
+        #seed-beige { left: 44%; top: 3%; width: 8%; }
+        #seed-green { left: 54%; top: 3%; width: 8%; }
 
-        /* ПОЗИЦИИ КОРЗИНОК (НАВЕРХУ) - СДВИНУТЫ, ЧТОБЫ НЕ НАЛЕЗАТЬ ДРУГ НА ДРУГА */
-        #basket-red { left: 4%; top: 2%; }
-        #basket-orange { left: 18%; top: 2%; }
-        #basket-brown { left: 32%; top: 2%; }
-        #basket-purple { left: 46%; top: 2%; }
-        #basket-beige { left: 60%; top: 2%; }
-        #basket-green { left: 74%; top: 2%; }
+        /* ПОЗИЦИИ КОРЗИНОК - НИЖЕ И РАВНОМЕРНО */
+        #basket-red { left: 5%; top: 12%; width: 15%; }
+        #basket-orange { left: 22%; top: 12%; width: 15%; }
+        #basket-brown { left: 39%; top: 12%; width: 15%; }
+        #basket-purple { left: 56%; top: 12%; width: 15%; }
+        #basket-beige { left: 73%; top: 12%; width: 15%; }
+        #basket-green { left: 90%; top: 12%; width: 15%; transform: translateX(-50%); }
 
         /* ЭКРАНЫ */
         .screen {
@@ -312,7 +312,7 @@
             <div class="hole-zone" id="hole-5" style="left: 48.5%; top: 66.8%;" data-seed="purple" data-screen="plant"></div>
             <div class="hole-zone" id="hole-6" style="left: 62.2%; top: 66.8%;" data-seed="green" data-screen="plant"></div>
 
-            <!-- СЕМЕНА (НАВЕРХУ) -->
+            <!-- СЕМЕНА (ВСЕ ОДИНАКОВОГО РАЗМЕРА) -->
             <img src="red.png" class="seed" id="seed-red" data-color="red" data-screen="plant">
             <img src="orange.png" class="seed" id="seed-orange" data-color="orange" data-screen="plant">
             <img src="brown.png" class="seed" id="seed-brown" data-color="brown" data-screen="plant">
@@ -326,7 +326,7 @@
 
         <!-- ========== ЭКРАН 2: СБОР УРОЖАЯ ========== -->
         <div id="screen-harvest" class="screen">
-            <!-- КОРЗИНКИ (КРУПНЫЕ, НАВЕРХУ) -->
+            <!-- КОРЗИНКИ (ОЧЕНЬ КРУПНЫЕ, НИЖЕ) -->
             <img src="red1.png" class="basket" id="basket-red" data-color="red">
             <img src="orange1.png" class="basket" id="basket-orange" data-color="orange">
             <img src="brown1.png" class="basket" id="basket-brown" data-color="brown">
@@ -344,7 +344,7 @@
 
             <!-- ОВОЩИ (В ЛУНКАХ) -->
             <img src="tomato.png" class="vegetable" id="veg-tomato" data-vegetable="tomato" data-color="red" style="left: 27%; top: 83.3%; transform: translate(-50%, -50%);">
-            <img src="potato.png" class="vegetable" id="veg-potato" data-vegetable="potato" data-color="brown" style="left: 48.5%; top: 83.3%; transform: translate(-50%, -50%);">
+            <img src="potato1.png" class="vegetable" id="veg-potato" data-vegetable="potato" data-color="brown" style="left: 48.5%; top: 83.3%; transform: translate(-50%, -50%);">
             <img src="luk.png" class="vegetable" id="veg-luk" data-vegetable="luk" data-color="beige" style="left: 68.8%; top: 83.3%; transform: translate(-50%, -50%);">
             <img src="carrot.png" class="vegetable" id="veg-carrot" data-vegetable="carrot" data-color="orange" style="left: 34.8%; top: 66.8%; transform: translate(-50%, -50%);">
             <img src="buk.png" class="vegetable" id="veg-buk" data-vegetable="buk" data-color="purple" style="left: 48.5%; top: 66.8%; transform: translate(-50%, -50%);">
@@ -523,10 +523,10 @@
                     const basketRect = basket.getBoundingClientRect();
                     
                     const expandedRect = {
-                        left: basketRect.left - 25,
-                        right: basketRect.right + 25,
-                        top: basketRect.top - 25,
-                        bottom: basketRect.bottom + 25
+                        left: basketRect.left - 30,
+                        right: basketRect.right + 30,
+                        top: basketRect.top - 30,
+                        bottom: basketRect.bottom + 30
                     };
                     
                     if (elementCenterX >= expandedRect.left && elementCenterX <= expandedRect.right &&
@@ -570,11 +570,11 @@
         function returnToStart(seed) {
             switch(seed.dataset.color) {
                 case 'red': seed.style.left = '4%'; seed.style.top = '3%'; break;
-                case 'orange': seed.style.left = '16%'; seed.style.top = '3%'; break;
-                case 'brown': seed.style.left = '28%'; seed.style.top = '3%'; break;
-                case 'purple': seed.style.left = '40%'; seed.style.top = '3%'; break;
-                case 'beige': seed.style.left = '52%'; seed.style.top = '3%'; break;
-                case 'green': seed.style.left = '64%'; seed.style.top = '3%'; break;
+                case 'orange': seed.style.left = '14%'; seed.style.top = '3%'; break;
+                case 'brown': seed.style.left = '24%'; seed.style.top = '3%'; break;
+                case 'purple': seed.style.left = '34%'; seed.style.top = '3%'; break;
+                case 'beige': seed.style.left = '44%'; seed.style.top = '3%'; break;
+                case 'green': seed.style.left = '54%'; seed.style.top = '3%'; break;
             }
         }
 
@@ -696,3 +696,5 @@
     </script>
 </body>
 </html>
+
+     
