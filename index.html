@@ -30,20 +30,16 @@
             align-items: center;
         }
 
-        /* ИГРОВОЙ КОНТЕЙНЕР - ПОЛНЫЙ ЭКРАН С СОХРАНЕНИЕМ ПРОПОРЦИЙ */
+        /* ИГРОВОЙ КОНТЕЙНЕР - ПОЛНЫЙ ЭКРАН */
         #game-container {
             position: relative;
-            width: min(100vw, 177.78vh);
-            height: min(56.25vw, 100vh);
-            max-width: 1344px;
-            max-height: 768px;
-            background-color: #4CAF50;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            margin: auto;
+            background-color: #4CAF50;
         }
 
-        /* ФОН */
+        /* ФОН - РАСТЯГИВАЕМ НА ВЕСЬ ЭКРАН */
         .background-layer {
             position: absolute;
             top: 0;
@@ -51,8 +47,9 @@
             width: 100%;
             height: 100%;
             background-image: url('fon.png');
-            background-size: cover;
+            background-size: cover; /* Растягиваем на весь экран */
             background-position: center;
+            background-repeat: no-repeat;
             z-index: 1;
         }
 
@@ -164,7 +161,7 @@
             transform: scale(1.1) !important;
         }
 
-        /* ПОЗИЦИИ СЕМЯН */
+        /* ПОЗИЦИИ СЕМЯН - В ПРОЦЕНТАХ ОТ ШИРИНЫ ЭКРАНА */
         #seed-red { left: 4%; top: 3%; width: 8%; }
         #seed-orange { left: 14%; top: 3%; width: 8%; }
         #seed-brown { left: 24%; top: 3%; width: 8%; }
