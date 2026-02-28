@@ -230,58 +230,63 @@
             display: none;
         }
 
-        /* ЭКРАН ПОБЕДЫ */
-        #win-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 200;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(8px);
-        }
+      /* ЭКРАН ПОБЕДЫ */
+#win-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 200;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px);
+}
 
-        .win-message {
-            background: #FFD700;
-            padding: 30px 40px;
-            border-radius: 60px;
-            border: 6px solid white;
-            text-align: center;
-            box-shadow: 0 15px 0 #B8860B;
-            margin-bottom: 30px;
-        }
+.win-message {
+    background: #FFD700;
+    padding: 20px 30px;        /* Было 30px 40px */
+    border-radius: 40px;        /* Было 60px */
+    border: 4px solid white;     /* Было 6px */
+    text-align: center;
+    box-shadow: 0 10px 0 #B8860B; /* Было 15px */
+    margin-bottom: 20px;         /* Было 30px */
+}
 
-        .win-message h2 {
-            font-size: 36px;
-            color: #2E5E2E;
-            text-shadow: 2px 2px 0 white;
-            margin-bottom: 10px;
-        }
+.win-message h2 {
+    font-size: 28px;            /* Было 36px */
+    color: #2E5E2E;
+    text-shadow: 2px 2px 0 white;
+    margin-bottom: 5px;          /* Было 10px */
+}
 
-        .win-message p {
-            font-size: 24px;
-            color: #4B2E1E;
-            font-weight: bold;
-        }
+.win-message p {
+    font-size: 18px;            /* Было 24px */
+    color: #4B2E1E;
+    font-weight: bold;
+}
 
-        .win-button {
-            padding: 18px 50px;
-            font-size: 32px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 60px;
-            cursor: pointer;
-            box-shadow: 0 8px 0 #2E7D32;
-            font-weight: bold;
-            border: 3px solid #FFD700;
-            transition: 0.1s;
-        }
+.win-message p:last-of-type {   /* Добавьте это для текста "Сыграем ещё?" */
+    font-size: 16px !important;  /* Уменьшает второй абзац */
+    margin-top: 10px !important;
+}
+
+.win-button {
+    padding: 12px 35px;         /* Было 18px 50px */
+    font-size: 24px;            /* Было 32px */
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 40px;        /* Было 60px */
+    cursor: pointer;
+    box-shadow: 0 6px 0 #2E7D32; /* Было 8px */
+    font-weight: bold;
+    border: 3px solid #FFD700;
+    transition: 0.1s;
+}
 
         .win-button:active {
             transform: translateY(6px);
