@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Посади семена</title>
+    <title>Огород: посади и собери</title>
     <style>
         * {
             margin: 0;
@@ -19,26 +19,30 @@
             overflow: hidden;
             position: fixed;
             touch-action: none;
-            background-color: #2c3e50;
         }
 
         body {
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+            background-color: #2c3e50;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* ИГРОВОЙ КОНТЕЙНЕР - КАК В КОЛОБКЕ */
+        /* ИГРОВОЙ КОНТЕЙНЕР */
         #game-container {
             position: relative;
             width: 100vw;
-            height: 100vh; /* На весь экран */
+            height: 57.14vw; /* 768/1344 = 0.5714, сохраняем пропорции фона */
+            max-width: 1344px;
+            max-height: 768px;
             background-color: #4CAF50;
             overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
             margin: auto;
         }
 
-        /* ФОН - РАСТЯГИВАЕТСЯ НА ВЕСЬ ЭКРАН */
+        /* ФОН */
         .background-layer {
             position: absolute;
             top: 0;
@@ -46,9 +50,8 @@
             width: 100%;
             height: 100%;
             background-image: url('fon.png');
-            background-size: cover; /* Растягиваем на весь экран */
+            background-size: cover;
             background-position: center;
-            background-repeat: no-repeat;
             z-index: 1;
         }
 
@@ -57,7 +60,8 @@
             position: absolute;
             top: 2%;
             right: 2%;
-            width: min(200px, 25%);
+            width: 20%;
+            max-width: 180px;
             aspect-ratio: 1/1;
             border: 4px solid white;
             border-radius: 16px;
@@ -75,21 +79,20 @@
             display: block;
         }
 
-        /* ЛУНКИ (невидимые зоны) - КООРДИНАТЫ В ПРОЦЕНТАХ */
+        /* ЛУНКИ (невидимые зоны) */
         .hole-zone {
             position: absolute;
-            width: 10%;  /* Размер зоны */
+            width: 10%;
             height: 10%;
             transform: translate(-50%, -50%);
             z-index: 5;
             /* border: 2px dashed red; /* Для отладки */
         }
 
-        /* СЕМЕНА */
-        .seed {
+        /* СЕМЕНА И ОВОЩИ - ОДИНАКОВЫЙ РАЗМЕР */
+        .seed, .vegetable {
             position: absolute;
-            width: 8%;
-            max-width: 80px;
+            width: 6%;  /* Одинаковый размер */
             height: auto;
             cursor: grab;
             touch-action: none;
@@ -97,70 +100,97 @@
             filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
             z-index: 20;
             transition: filter 0.2s;
-            transform: translate(0, 0); /* Важно для позиционирования */
+            pointer-events: auto;
         }
 
-        .seed:active {
+        .seed:active, .vegetable:active {
             cursor: grabbing;
             filter: drop-shadow(0 8px 6px rgba(0,0,0,0.5));
         }
 
-        .seed.dragging {
+        .seed.dragging, .vegetable.dragging {
             transition: none;
         }
 
-        .seed.placed {
+        .seed.placed, .vegetable.placed {
             cursor: default;
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
             pointer-events: none;
         }
 
-        /* СТАРТОВЫЕ ПОЗИЦИИ СЕМЯН (внизу) */
-        #seed-red { left: 10%; top: 90%; }
-        #seed-orange { left: 25%; top: 90%; }
-        #seed-brown { left: 40%; top: 90%; }
-        #seed-purple { left: 55%; top: 90%; }
-        #seed-beige { left: 70%; top: 90%; }
-        #seed-green { left: 85%; top: 90%; }
+        /* СТАРТОВЫЕ ПОЗИЦИИ СЕМЯН (НАВЕРХУ) */
+        #seed-red { left: 5%; top: 5%; }
+        #seed-orange { left: 15%; top: 5%; }
+        #seed-brown { left: 25%; top: 5%; }
+        #seed-purple { left: 35%; top: 5%; }
+        #seed-beige { left: 45%; top: 5%; }
+        #seed-green { left: 55%; top: 5%; }
 
-        /* ЭКРАН РЕЗУЛЬТАТА */
-        #result-screen {
+        /* КОРЗИНКИ (на втором экране) */
+        .basket {
+            position: absolute;
+            width: 6%;  /* Одинаковый размер с семенами */
+            height: auto;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        /* ПОЗИЦИИ КОРЗИНОК (наверху) */
+        #basket-red { left: 5%; top: 5%; }      /* для томата */
+        #basket-orange { left: 15%; top: 5%; }  /* для моркови */
+        #basket-brown { left: 25%; top: 5%; }   /* для картошки */
+        #basket-purple { left: 35%; top: 5%; }  /* для бурака */
+        #basket-beige { left: 45%; top: 5%; }   /* для лука */
+        #basket-green { left: 55%; top: 5%; }   /* для огурца */
+
+        /* ОВОЩИ НА ГРЯДКЕ (второй экран) */
+        .vegetable {
+            cursor: grab;
+        }
+
+        /* ЭКРАНЫ */
+        .screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            z-index: 100;
+            z-index: 2;
+        }
+
+        #screen-plant {
+            display: block;
+        }
+
+        #screen-harvest {
             display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
         }
 
-        .result-img {
-            width: min(500px, 80%);
-            border: 5px solid white;
-            border-radius: 20px;
-            margin-bottom: 20px;
-        }
-
+        /* КНОПКА ПЕРЕХОДА */
         .next-button {
-            padding: min(15px, 2vh) min(40px, 5vw);
-            font-size: min(28px, 4vh);
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 30px;
+            font-size: 24px;
             background: #4CAF50;
             color: white;
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 5px 0 #2E7D32;
+            box-shadow: 0 4px 0 #2E7D32;
             font-weight: bold;
+            z-index: 30;
         }
 
         .next-button:active {
-            transform: translateY(4px);
+            transform: translateX(-50%) translateY(4px);
             box-shadow: 0 1px 0 #2E7D32;
+        }
+
+        .next-button.hidden {
+            display: none;
         }
 
         @keyframes shake {
@@ -175,54 +205,125 @@
         .shake {
             animation: shake 0.4s ease-in-out;
         }
+
+        /* ПОБЕДА */
+        #win-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .win-img {
+            width: min(300px, 50%);
+            border: 5px solid white;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .win-button {
+            padding: 15px 40px;
+            font-size: 28px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #2E7D32;
+        }
+
+        .win-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #2E7D32;
+        }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <!-- ФОН -->
+        <!-- ФОН (один для обоих экранов) -->
         <div class="background-layer"></div>
 
-        <!-- КАРТА ПОСАДКИ -->
-        <div class="map-container">
-            <img src="map.png" alt="Карта посадки" class="map-img">
+        <!-- ========== ЭКРАН 1: ПОСАДКА ========== -->
+        <div id="screen-plant" class="screen">
+            <!-- КАРТА ПОСАДКИ -->
+            <div class="map-container">
+                <img src="map.png" alt="Карта посадки" class="map-img">
+            </div>
+
+            <!-- ЛУНКИ -->
+            <div class="hole-zone" id="hole-1" style="left: 27%; top: 83.3%;" data-seed="red" data-screen="plant"></div>
+            <div class="hole-zone" id="hole-2" style="left: 48.5%; top: 83.3%;" data-seed="brown" data-screen="plant"></div>
+            <div class="hole-zone" id="hole-3" style="left: 68.8%; top: 83.3%;" data-seed="beige" data-screen="plant"></div>
+            <div class="hole-zone" id="hole-4" style="left: 34.8%; top: 66.8%;" data-seed="orange" data-screen="plant"></div>
+            <div class="hole-zone" id="hole-5" style="left: 48.5%; top: 66.8%;" data-seed="purple" data-screen="plant"></div>
+            <div class="hole-zone" id="hole-6" style="left: 62.2%; top: 66.8%;" data-seed="green" data-screen="plant"></div>
+
+            <!-- СЕМЕНА (НАВЕРХУ) -->
+            <img src="red.png" class="seed" id="seed-red" data-color="red" data-screen="plant">
+            <img src="orange.png" class="seed" id="seed-orange" data-color="orange" data-screen="plant">
+            <img src="brown.png" class="seed" id="seed-brown" data-color="brown" data-screen="plant">
+            <img src="purple.png" class="seed" id="seed-purple" data-color="purple" data-screen="plant">
+            <img src="beige.png" class="seed" id="seed-beige" data-color="beige" data-screen="plant">
+            <img src="green.png" class="seed" id="seed-green" data-color="green" data-screen="plant">
+
+            <!-- КНОПКА ПЕРЕХОДА (появляется после посадки) -->
+            <button class="next-button hidden" id="to-harvest-btn" onclick="switchToHarvest()">🌱 НА СБОР УРОЖАЯ 🌱</button>
         </div>
 
-        <!-- ЛУНКИ (координаты из ваших данных) -->
-        <div class="hole-zone" id="hole-1" style="left: 27%; top: 83.3%;" data-seed="red"></div>
-        <div class="hole-zone" id="hole-2" style="left: 48.5%; top: 83.3%;" data-seed="brown"></div>
-        <div class="hole-zone" id="hole-3" style="left: 68.8%; top: 83.3%;" data-seed="beige"></div>
-        <div class="hole-zone" id="hole-4" style="left: 34.8%; top: 66.8%;" data-seed="orange"></div>
-        <div class="hole-zone" id="hole-5" style="left: 48.5%; top: 66.8%;" data-seed="purple"></div>
-        <div class="hole-zone" id="hole-6" style="left: 62.2%; top: 66.8%;" data-seed="green"></div>
+        <!-- ========== ЭКРАН 2: СБОР УРОЖАЯ ========== -->
+        <div id="screen-harvest" class="screen">
+            <!-- КОРЗИНКИ (НАВЕРХУ) -->
+            <img src="red1.png" class="basket" id="basket-red" data-color="red">
+            <img src="orange1.png" class="basket" id="basket-orange" data-color="orange">
+            <img src="brown1.png" class="basket" id="basket-brown" data-color="brown">
+            <img src="purple1.png" class="basket" id="basket-purple" data-color="purple">
+            <img src="beige1.png" class="basket" id="basket-beige" data-color="beige">
+            <img src="green1.png" class="basket" id="basket-green" data-color="green">
 
-        <!-- СЕМЕНА -->
-        <img src="red.png" class="seed" id="seed-red" data-color="red">
-        <img src="orange.png" class="seed" id="seed-orange" data-color="orange">
-        <img src="brown.png" class="seed" id="seed-brown" data-color="brown">
-        <img src="purple.png" class="seed" id="seed-purple" data-color="purple">
-        <img src="beige.png" class="seed" id="seed-beige" data-color="beige">
-        <img src="green.png" class="seed" id="seed-green" data-color="green">
+            <!-- ЛУНКИ ДЛЯ ОВОЩЕЙ -->
+            <div class="hole-zone" id="hole-1-harvest" style="left: 27%; top: 83.3%;" data-vegetable="tomato" data-screen="harvest"></div>
+            <div class="hole-zone" id="hole-2-harvest" style="left: 48.5%; top: 83.3%;" data-vegetable="potato" data-screen="harvest"></div>
+            <div class="hole-zone" id="hole-3-harvest" style="left: 68.8%; top: 83.3%;" data-vegetable="luk" data-screen="harvest"></div>
+            <div class="hole-zone" id="hole-4-harvest" style="left: 34.8%; top: 66.8%;" data-vegetable="carrot" data-screen="harvest"></div>
+            <div class="hole-zone" id="hole-5-harvest" style="left: 48.5%; top: 66.8%;" data-vegetable="buk" data-screen="harvest"></div>
+            <div class="hole-zone" id="hole-6-harvest" style="left: 62.2%; top: 66.8%;" data-vegetable="ogr" data-screen="harvest"></div>
 
-        <!-- ЭКРАН РЕЗУЛЬТАТА -->
-        <div id="result-screen">
-            <img src="result.png" alt="Урожай вырос!" class="result-img">
-            <button class="next-button" onclick="goToHarvest()">🌱 НА СБОР УРОЖАЯ 🌱</button>
+            <!-- ОВОЩИ (В ЛУНКАХ) -->
+            <img src="tomato.png" class="vegetable" id="veg-tomato" data-vegetable="tomato" data-color="red" style="left: 27%; top: 83.3%; transform: translate(-50%, -50%);">
+            <img src="potato.png" class="vegetable" id="veg-potato" data-vegetable="potato" data-color="brown" style="left: 48.5%; top: 83.3%; transform: translate(-50%, -50%);">
+            <img src="luk.png" class="vegetable" id="veg-luk" data-vegetable="luk" data-color="beige" style="left: 68.8%; top: 83.3%; transform: translate(-50%, -50%);">
+            <img src="carrot.png" class="vegetable" id="veg-carrot" data-vegetable="carrot" data-color="orange" style="left: 34.8%; top: 66.8%; transform: translate(-50%, -50%);">
+            <img src="buk.png" class="vegetable" id="veg-buk" data-vegetable="buk" data-color="purple" style="left: 48.5%; top: 66.8%; transform: translate(-50%, -50%);">
+            <img src="ogr.png" class="vegetable" id="veg-ogr" data-vegetable="ogr" data-color="green" style="left: 62.2%; top: 66.8%; transform: translate(-50%, -50%);">
+        </div>
+
+        <!-- ЭКРАН ПОБЕДЫ -->
+        <div id="win-screen">
+            <img src="win.png" alt="Победа!" class="win-img">
+            <button class="win-button" onclick="playAgain()">🎮 ИГРАТЬ ЕЩЁ 🎮</button>
         </div>
     </div>
 
     <script>
-        // ========== ИГРОВАЯ ЛОГИКА ==========
-        
-        const seeds = document.querySelectorAll('.seed');
-        const holes = document.querySelectorAll('.hole-zone');
-        const resultScreen = document.getElementById('result-screen');
+        // ========== ОБЩИЕ ПЕРЕМЕННЫЕ ==========
         const container = document.getElementById('game-container');
+        const screenPlant = document.getElementById('screen-plant');
+        const screenHarvest = document.getElementById('screen-harvest');
+        const winScreen = document.getElementById('win-screen');
+        const toHarvestBtn = document.getElementById('to-harvest-btn');
 
-        const filledHoles = new Array(holes.length).fill(false);
-        
+        // Состояние игры
         let isDragging = false;
-        let currentSeed = null;
+        let currentElement = null;
         let startX, startY, startLeft, startTop;
         let audioContext = null;
 
@@ -265,20 +366,24 @@
         // ========== ПЕРЕТАСКИВАНИЕ ==========
         
         function onDragStart(e) {
-            if (e.target.classList.contains('placed')) return;
-            if (resultScreen.style.display === 'flex') return;
+            const element = e.target;
+            
+            // Проверяем, можно ли перетаскивать
+            if (!element.classList.contains('seed') && !element.classList.contains('vegetable')) return;
+            if (element.classList.contains('placed')) return;
+            if (winScreen.style.display === 'flex') return;
             
             e.preventDefault();
             initAudio();
             
-            currentSeed = e.target;
+            currentElement = element;
             isDragging = true;
-            currentSeed.classList.add('dragging');
+            currentElement.classList.add('dragging');
             
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             
-            const rect = currentSeed.getBoundingClientRect();
+            const rect = currentElement.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
             
             startX = clientX - rect.left;
@@ -287,12 +392,12 @@
             startLeft = rect.left - containerRect.left;
             startTop = rect.top - containerRect.top;
             
-            currentSeed.style.left = startLeft + 'px';
-            currentSeed.style.top = startTop + 'px';
+            currentElement.style.left = startLeft + 'px';
+            currentElement.style.top = startTop + 'px';
         }
 
         function onDragMove(e) {
-            if (!isDragging || !currentSeed) return;
+            if (!isDragging || !currentElement) return;
             e.preventDefault();
             
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -303,63 +408,115 @@
             let newLeft = clientX - startX - containerRect.left;
             let newTop = clientY - startY - containerRect.top;
             
-            const seedWidth = currentSeed.offsetWidth;
-            const seedHeight = currentSeed.offsetHeight;
+            const elementWidth = currentElement.offsetWidth;
+            const elementHeight = currentElement.offsetHeight;
             
-            newLeft = Math.max(0, Math.min(newLeft, containerRect.width - seedWidth));
-            newTop = Math.max(0, Math.min(newTop, containerRect.height - seedHeight));
+            newLeft = Math.max(0, Math.min(newLeft, containerRect.width - elementWidth));
+            newTop = Math.max(0, Math.min(newTop, containerRect.height - elementHeight));
             
-            currentSeed.style.left = newLeft + 'px';
-            currentSeed.style.top = newTop + 'px';
+            currentElement.style.left = newLeft + 'px';
+            currentElement.style.top = newTop + 'px';
         }
 
         function onDragEnd(e) {
-            if (!isDragging || !currentSeed) return;
+            if (!isDragging || !currentElement) return;
             e.preventDefault();
             
             isDragging = false;
-            currentSeed.classList.remove('dragging');
+            currentElement.classList.remove('dragging');
             
-            checkDrop(currentSeed);
-            currentSeed = null;
+            checkDrop(currentElement);
+            currentElement = null;
         }
 
-        // ========== ПРОВЕРКА ==========
+        // ========== ПРОВЕРКА ДЛЯ ПОСАДКИ ==========
         
-        function checkDrop(seed) {
-            const seedRect = seed.getBoundingClientRect();
-            const seedCenterX = seedRect.left + seedRect.width / 2;
-            const seedCenterY = seedRect.top + seedRect.height / 2;
+        function checkDrop(element) {
+            const elementRect = element.getBoundingClientRect();
+            const elementCenterX = elementRect.left + elementRect.width / 2;
+            const elementCenterY = elementRect.top + elementRect.height / 2;
             
-            const seedColor = seed.dataset.color;
+            // Определяем, какой сейчас экран
+            const currentScreen = element.closest('.screen').id;
             
-            for (let i = 0; i < holes.length; i++) {
-                const hole = holes[i];
-                const holeRect = hole.getBoundingClientRect();
+            if (currentScreen === 'screen-plant') {
+                // ЭКРАН ПОСАДКИ
+                const seedColor = element.dataset.color;
+                const holes = document.querySelectorAll('#screen-plant .hole-zone');
                 
-                if (seedCenterX >= holeRect.left && seedCenterX <= holeRect.right &&
-                    seedCenterY >= holeRect.top && seedCenterY <= holeRect.bottom) {
+                for (let i = 0; i < holes.length; i++) {
+                    const hole = holes[i];
+                    const holeRect = hole.getBoundingClientRect();
                     
-                    const requiredColor = hole.dataset.seed;
-                    
-                    if (seedColor === requiredColor && !filledHoles[i]) {
-                        plantSeed(seed, hole, i);
-                        playSound('correct');
-                    } else {
-                        playSound('error');
-                        returnSeedToStart(seed);
-                        container.classList.add('shake');
-                        setTimeout(() => container.classList.remove('shake'), 400);
+                    if (elementCenterX >= holeRect.left && elementCenterX <= holeRect.right &&
+                        elementCenterY >= holeRect.top && elementCenterY <= holeRect.bottom) {
+                        
+                        const requiredColor = hole.dataset.seed;
+                        
+                        if (seedColor === requiredColor && !element.classList.contains('placed')) {
+                            // Правильно
+                            plantSeed(element, hole, i);
+                            playSound('correct');
+                        } else {
+                            // Неправильно
+                            playSound('error');
+                            returnToStart(element);
+                            container.classList.add('shake');
+                            setTimeout(() => container.classList.remove('shake'), 400);
+                        }
+                        return;
                     }
-                    return;
                 }
+                
+                // Не попал в лунку
+                returnToStart(element);
+                
+            } else if (currentScreen === 'screen-harvest') {
+                // ЭКРАН СБОРА
+                const vegetableType = element.dataset.vegetable;
+                const vegetableColor = element.dataset.color;
+                const baskets = document.querySelectorAll('#screen-harvest .basket');
+                
+                for (let i = 0; i < baskets.length; i++) {
+                    const basket = baskets[i];
+                    const basketRect = basket.getBoundingClientRect();
+                    
+                    // Увеличиваем зону корзинки для удобства
+                    const expandedRect = {
+                        left: basketRect.left - 20,
+                        right: basketRect.right + 20,
+                        top: basketRect.top - 20,
+                        bottom: basketRect.bottom + 20
+                    };
+                    
+                    if (elementCenterX >= expandedRect.left && elementCenterX <= expandedRect.right &&
+                        elementCenterY >= expandedRect.top && elementCenterY <= expandedRect.bottom) {
+                        
+                        const basketColor = basket.dataset.color;
+                        
+                        if (vegetableColor === basketColor && !element.classList.contains('placed')) {
+                            // Правильно
+                            harvestVegetable(element, basket, i);
+                            playSound('correct');
+                        } else {
+                            // Неправильно
+                            playSound('error');
+                            returnVegetableToStart(element);
+                            container.classList.add('shake');
+                            setTimeout(() => container.classList.remove('shake'), 400);
+                        }
+                        return;
+                    }
+                }
+                
+                // Не попал в корзинку
+                returnVegetableToStart(element);
             }
-            
-            returnSeedToStart(seed);
         }
 
+        // ========== ФУНКЦИИ ДЛЯ ПОСАДКИ ==========
+        
         function plantSeed(seed, hole, holeIndex) {
-            filledHoles[holeIndex] = true;
             seed.classList.add('placed');
             
             const holeRect = hole.getBoundingClientRect();
@@ -371,40 +528,127 @@
             seed.style.left = targetLeft + 'px';
             seed.style.top = targetTop + 'px';
             
+            // Проверяем, все ли семена посажены
             checkAllPlanted();
         }
 
-        function returnSeedToStart(seed) {
+        function returnToStart(seed) {
             switch(seed.dataset.color) {
-                case 'red': seed.style.left = '10%'; seed.style.top = '90%'; break;
-                case 'orange': seed.style.left = '25%'; seed.style.top = '90%'; break;
-                case 'brown': seed.style.left = '40%'; seed.style.top = '90%'; break;
-                case 'purple': seed.style.left = '55%'; seed.style.top = '90%'; break;
-                case 'beige': seed.style.left = '70%'; seed.style.top = '90%'; break;
-                case 'green': seed.style.left = '85%'; seed.style.top = '90%'; break;
+                case 'red': seed.style.left = '5%'; seed.style.top = '5%'; break;
+                case 'orange': seed.style.left = '15%'; seed.style.top = '5%'; break;
+                case 'brown': seed.style.left = '25%'; seed.style.top = '5%'; break;
+                case 'purple': seed.style.left = '35%'; seed.style.top = '5%'; break;
+                case 'beige': seed.style.left = '45%'; seed.style.top = '5%'; break;
+                case 'green': seed.style.left = '55%'; seed.style.top = '5%'; break;
             }
         }
 
         function checkAllPlanted() {
+            const seeds = document.querySelectorAll('#screen-plant .seed');
             const allPlanted = Array.from(seeds).every(seed => seed.classList.contains('placed'));
             
             if (allPlanted) {
+                toHarvestBtn.classList.remove('hidden');
+            }
+        }
+
+        // ========== ПЕРЕХОД НА ВТОРОЙ ЭКРАН ==========
+        
+        function switchToHarvest() {
+            screenPlant.style.display = 'none';
+            screenHarvest.style.display = 'block';
+        }
+
+        // ========== ФУНКЦИИ ДЛЯ СБОРА ==========
+        
+        function harvestVegetable(vegetable, basket, basketIndex) {
+            vegetable.classList.add('placed');
+            
+            const basketRect = basket.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            const targetLeft = basketRect.left - containerRect.left + (basketRect.width / 2) - (vegetable.offsetWidth / 2);
+            const targetTop = basketRect.top - containerRect.top + (basketRect.height / 2) - (vegetable.offsetHeight / 2);
+            
+            vegetable.style.left = targetLeft + 'px';
+            vegetable.style.top = targetTop + 'px';
+            
+            // Проверяем, все ли овощи собраны
+            checkAllHarvested();
+        }
+
+        function returnVegetableToStart(vegetable) {
+            // Возвращаем в исходную лунку
+            switch(vegetable.dataset.vegetable) {
+                case 'tomato':
+                    vegetable.style.left = '27%';
+                    vegetable.style.top = '83.3%';
+                    break;
+                case 'potato':
+                    vegetable.style.left = '48.5%';
+                    vegetable.style.top = '83.3%';
+                    break;
+                case 'luk':
+                    vegetable.style.left = '68.8%';
+                    vegetable.style.top = '83.3%';
+                    break;
+                case 'carrot':
+                    vegetable.style.left = '34.8%';
+                    vegetable.style.top = '66.8%';
+                    break;
+                case 'buk':
+                    vegetable.style.left = '48.5%';
+                    vegetable.style.top = '66.8%';
+                    break;
+                case 'ogr':
+                    vegetable.style.left = '62.2%';
+                    vegetable.style.top = '66.8%';
+                    break;
+            }
+            vegetable.style.transform = 'translate(-50%, -50%)';
+        }
+
+        function checkAllHarvested() {
+            const vegetables = document.querySelectorAll('#screen-harvest .vegetable');
+            const allHarvested = Array.from(vegetables).every(veg => veg.classList.contains('placed'));
+            
+            if (allHarvested) {
                 setTimeout(() => {
-                    resultScreen.style.display = 'flex';
+                    winScreen.style.display = 'flex';
                 }, 500);
             }
         }
 
-        function goToHarvest() {
-            alert('Переход на сбор урожая!');
-            // Здесь будет переход на второй экран
+        // ========== ИГРАТЬ СНОВА ==========
+        
+        function playAgain() {
+            winScreen.style.display = 'none';
+            screenHarvest.style.display = 'none';
+            screenPlant.style.display = 'block';
+            
+            // Сбрасываем все семена
+            const seeds = document.querySelectorAll('#screen-plant .seed');
+            seeds.forEach(seed => {
+                seed.classList.remove('placed');
+                returnToStart(seed);
+            });
+            
+            // Сбрасываем все овощи
+            const vegetables = document.querySelectorAll('#screen-harvest .vegetable');
+            vegetables.forEach(veg => {
+                veg.classList.remove('placed');
+                returnVegetableToStart(veg);
+            });
+            
+            toHarvestBtn.classList.add('hidden');
         }
 
-        // ========== СОБЫТИЯ ==========
+        // ========== НАЗНАЧАЕМ СОБЫТИЯ ==========
         
-        seeds.forEach(seed => {
-            seed.addEventListener('mousedown', onDragStart);
-            seed.addEventListener('touchstart', onDragStart, { passive: false });
+        // Слушаем события на всех перетаскиваемых элементах
+        document.querySelectorAll('.seed, .vegetable').forEach(element => {
+            element.addEventListener('mousedown', onDragStart);
+            element.addEventListener('touchstart', onDragStart, { passive: false });
         });
 
         window.addEventListener('mousemove', onDragMove);
@@ -413,9 +657,14 @@
         window.addEventListener('mouseup', onDragEnd);
         window.addEventListener('touchend', onDragEnd);
 
-        // Запрещаем выделение текста
+        // Запрещаем выделение
         document.addEventListener('selectstart', (e) => e.preventDefault());
+
+        // Делаем функции глобальными
+        window.switchToHarvest = switchToHarvest;
+        window.playAgain = playAgain;
 
     </script>
 </body>
 </html>
+
